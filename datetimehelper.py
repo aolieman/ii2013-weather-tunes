@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 def to_epoch(d):
-    return (d - datetime(1970,1,1)).total_seconds()
+    return int((d - datetime(1970,1,1)).total_seconds())
 
 def get_previous_day_of_week(weekday, date):
     diff_days = weekday - date.isoweekday()

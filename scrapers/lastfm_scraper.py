@@ -8,7 +8,6 @@ from time import sleep
 from mongohelper import append_mongo_index
 from datetimehelper import *
 
-METRO_WEEKLY_CHARTLIST = 'lastfm_metro_weekly_chartlist'
 METRO_WEEKLY_TRACKCHART = 'lastfm_metro_weekly_trackchart'
     
 # TODO convert input dates to the dates present in weekly_chart_availability. Pick the closest date.
