@@ -5,8 +5,8 @@ import pymongo
 import datetime
 from datetime import timedelta, datetime
 from time import sleep
-from mongohelper import append_mongo_index
-from datetimehelper import *
+from helpers.mongohelper import append_mongo_index
+from helpers.datetimehelper import *
 
 METRO_WEEKLY_TRACKCHART = 'lastfm_metro_weekly_trackchart'
     

@@ -3,8 +3,8 @@ import urllib2
 import json
 from datetime import datetime, timedelta, date, time
 from time import time, sleep
-from datetimehelper import *
-from mongohelper import *
+from helpers.datetimehelper import *
+from helpers.mongohelper import *
 
 WOUNDERGROUND_DAILY_SUMMARY = 'wounderground_daily_summary'
 
