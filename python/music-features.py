@@ -55,8 +55,8 @@ def lastfm_info(tracktuple, trinfo):
     return trinfo
 
 def echonest_info(tracktuple, trinfo):
-    sartist = str(tracktuple[1])
-    stitle = str(tracktuple[2])
+    sartist = translate_artist(tracktuple[1]).encode('utf-8')
+    stitle = tracktuple[2].encode('utf-8')
 
     while True:
         try:
@@ -64,6 +64,7 @@ def echonest_info(tracktuple, trinfo):
                                    buckets=['id:musixmatch-WW',\
                                             'audio_summary',\
                                             'song_hotttnesss',\
+                                            'artist_familiarity',\
                                             'artist_location'])
             time.sleep(1)
             break
@@ -80,7 +81,7 @@ def echonest_info(tracktuple, trinfo):
         trinfo['track']['audiosummary'] = s.audio_summary
         trinfo['track']['hotttnesss'] = s.song_hotttnesss
         try:
-            trinfo['track']['id']['musixmatch'] = s.get_foreign_id('musixmatch-WW')
+            trinfo['track']['id']['musixmatch'] = str(s.get_foreign_id('musixmatch-WW')).replace('musixmatch-WW:', '')
         except util.EchoNestAPIError:
             time.sleep(5)
         try:
@@ -97,14 +98,22 @@ def get_tracks(chart):
     for track in jchart['toptracks']['track']:
         tracklist.append((track['mbid'], track['artist']['name'], track['name']))
     return tracklist
-    
+
+def translate_artist(string):
+    artist_translations = {\
+        'Alt-J': 'ALTJ',
+        'examplestring': 'substitution'}
+    keylist = artist_translations.keys()
+    if string in keylist:
+        string = artist_translations[string]
+    return string
 
 if __name__ == '__main__' :
 
-    chart = '../json/geochart_nyc.json'
+    chart = '../json/geochart_nyc_old.json'
 
     ## execute and save
-    outfile = open('../json/trackinfo_nyc.json', 'wb')
+    outfile = open('../json/trackinfo_nyc_old.json', 'wb')
     trlist = get_tracks(chart)
     print '++ Adding tracks from tracklist'
     infolist = []
