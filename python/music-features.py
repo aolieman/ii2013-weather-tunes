@@ -1,9 +1,24 @@
-import io, json, urllib2
+import io, json, urllib2, time
+import apikeys
+from pyechonest import config, song, util
 
-LASTFM_KEY = '126da10c7b76db388c8537edbac24c6c'
-failedlist = []
+LASTFM_KEY = apikeys.alex_lastfm
+config.ECHO_NEST_API_KEY = apikeys.alex_echonest
+lastfm_failed = []
+echonest_failed = []
 
-def track_info(tracktuple, outfile):
+def track_info(tracktuple):
+    trinfo = {}
+    trinfo['track'] = {}
+    trinfo['track']['id'] = {}
+
+    lastinfo = lastfm_info(tracktuple, trinfo)
+    echoinfo = echonest_info(tracktuple, lastinfo)
+    
+    trinfo = echoinfo
+    return trinfo
+
+def lastfm_info(tracktuple, trinfo):
     if tracktuple[0] != '':
         mbid = '&mbid=' + tracktuple[0]
     else: mbid = ''
@@ -17,13 +32,11 @@ def track_info(tracktuple, outfile):
     try:
         result = response['track']
     except KeyError:
-        global failedlist
-        print '?? No result for', tracktuple
+        global lastfm_failed
+        print '?? No result for', tracktuple, 'on last.fm'
         print '   ', response
-        failedlist.append(tracktuple)
+        lastfm_failed.append(tracktuple)
     if result != None:
-        trinfo = {}
-        trinfo['track'] = {}
         trinfo['track']['name'] = response['track']['name']
         try:
             album_response = response['track']['album']
@@ -36,11 +49,47 @@ def track_info(tracktuple, outfile):
             print '?? No album for', trinfo['track']['name']
         trinfo['track']['artist'] = response['track']['artist']
         trinfo['track']['toptags'] = response['track']['toptags']
-        trinfo['track']['mbid'] = response['track']['mbid']
+        trinfo['track']['id']['musicbrainz'] = response['track']['mbid']
         trinfo['track']['duration'] = response['track']['duration']
-        json.dump(trinfo, outfile, indent=4, separators=(',', ': '))
-        outfile.write(',\n')
         print trinfo['track']['name'], 'succesfully appended'
+    return trinfo
+
+def echonest_info(tracktuple, trinfo):
+    sartist = str(tracktuple[1])
+    stitle = str(tracktuple[2])
+
+    while True:
+        try:
+            response = song.search(artist=sartist, title=stitle, results=1, \
+                                   buckets=['id:musixmatch-WW',\
+                                            'audio_summary',\
+                                            'song_hotttnesss',\
+                                            'artist_location'])
+            time.sleep(1)
+            break
+        except util.EchoNestAPIError:
+            time.sleep(15) # the Echonest call limit is variable
+ 
+    if len(response) == 0:
+        global echonest_failed
+        print '?? No result for', tracktuple, 'on echonest'
+        echonest_failed.append(tracktuple)
+    else:
+        s = response[0]
+        trinfo['track']['id']['echonest'] = s.id
+        trinfo['track']['audiosummary'] = s.audio_summary
+        trinfo['track']['hotttnesss'] = s.song_hotttnesss
+        try:
+            trinfo['track']['id']['musixmatch'] = s.get_foreign_id('musixmatch-WW')
+        except util.EchoNestAPIError:
+            time.sleep(5)
+        try:
+            trinfo['track']['artist']['familiarity'] = s.artist_familiarity
+        except KeyError: pass
+        try:
+            trinfo['track']['artist']['location'] = s.artist_location
+        except KeyError: pass
+    return trinfo
 
 def get_tracks(chart):
     tracklist = []
@@ -52,16 +101,22 @@ def get_tracks(chart):
 
 if __name__ == '__main__' :
 
-    chart = '../json/geochart_ams.json'
+    chart = '../json/geochart_nyc.json'
 
     ## execute and save
-    outfile = open('../json/trackinfo_ams.json', 'wb')
+    outfile = open('../json/trackinfo_nyc.json', 'wb')
     trlist = get_tracks(chart)
-    print '++ Adding tracks by from tracklist'
+    print '++ Adding tracks from tracklist'
+    infolist = []
     for tracktuple in trlist:
-        track_info(tracktuple, outfile)
+        trinfo = track_info(tracktuple)
+        infolist.append(trinfo)
+    track_features = {"trackfeatures": infolist}
+    json.dump(track_features, outfile, indent=4, separators=(',', ': '))
     outfile.close()
 
-    if len(failedlist) == 0:
+    if len(lastfm_failed) == 0 and len(echonest_failed) == 0:
         print '!! Everything succeeded'
-    else: print failedlist
+    else:
+        print 'Last.fm failed', len(lastfm_failed), ':', lastfm_failed
+        print 'Echonest failed', len(echonest_failed), ':', echonest_failed
