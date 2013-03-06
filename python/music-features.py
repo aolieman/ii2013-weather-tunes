@@ -1,6 +1,12 @@
 import io, json, urllib2, time
 import apikeys
 from pyechonest import config, song, util
+import pymongo
+from pymongo import MongoClient
+
+connection = MongoClient()
+db = connection.internet_information
+collection = db.lastfm_music_features
 
 LASTFM_KEY = apikeys.alex_lastfm
 config.ECHO_NEST_API_KEY = apikeys.alex_echonest
@@ -113,7 +119,7 @@ if __name__ == '__main__' :
     chart = '../json/geochart_nyc_old.json'
 
     ## execute and save
-    outfile = open('../json/trackinfo_nyc_old.json', 'wb')
+    #outfile = open('../json/trackinfo_nyc_old.json', 'wb')
     trlist = get_tracks(chart)
     print '++ Adding tracks from tracklist'
     infolist = []
@@ -121,9 +127,9 @@ if __name__ == '__main__' :
         trinfo = track_info(tracktuple)
         infolist.append(trinfo)
     track_features = {"trackfeatures": infolist}
-    json.dump(track_features, outfile, indent=4, separators=(',', ': '))
-    outfile.close()
-
+    #json.dump(track_features, outfile, indent=4, separators=(',', ': '))
+    #outfile.close()
+    collection.insert(infolist)
     if len(lastfm_failed) == 0 and len(echonest_failed) == 0:
         print '!! Everything succeeded'
     else:
