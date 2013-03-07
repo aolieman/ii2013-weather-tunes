@@ -124,8 +124,18 @@ if __name__ == '__main__' :
     print '++ Adding tracks from tracklist'
     infolist = []
     for tracktuple in trlist:
+        cache = collection.find_one({'cache_index' : {'track_name' : tracktuple[2], 'artist_name' : tracktuple[1]}})
+        if cache != None:
+                print 'Feature data of track %s of %s already in cache' % (tracktuple[2], tracktuple[1])
+                continue
         trinfo = track_info(tracktuple)
-        infolist.append(trinfo)
+        
+        #hier ergens gaat hij eerst twee keer alle track features dumpen
+        #van elke track heeft er 1 een cache_index document
+        features = {'cache_index': {'track_name': tracktuple[2], 'artist_name': tracktuple[1]}}
+        collection.insert(features)
+        collection.insert(trlist)
+        #infolist.append(trinfo)
     track_features = {"trackfeatures": infolist}
     #json.dump(track_features, outfile, indent=4, separators=(',', ': '))
     #outfile.close()
