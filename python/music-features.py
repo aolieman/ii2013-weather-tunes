@@ -70,6 +70,7 @@ def echonest_info(tracktuple, trinfo):
                                    buckets=['id:musixmatch-WW',\
                                             'audio_summary',\
                                             'song_hotttnesss',\
+                                            'song_type',\
                                             'artist_familiarity',\
                                             'artist_location'])
             time.sleep(1)
@@ -86,6 +87,7 @@ def echonest_info(tracktuple, trinfo):
         trinfo['track']['id']['echonest'] = s.id
         trinfo['track']['audiosummary'] = s.audio_summary
         trinfo['track']['hotttnesss'] = s.song_hotttnesss
+        trinfo['track']['song_type'] = s.song_type
         try:
             trinfo['track']['id']['musixmatch'] = str(s.get_foreign_id('musixmatch-WW')).replace('musixmatch-WW:', '')
         except util.EchoNestAPIError:
