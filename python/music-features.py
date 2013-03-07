@@ -120,28 +120,21 @@ if __name__ == '__main__' :
 
     chart = '../json/geochart_nyc_old.json'
 
-    ## execute and save
-    #outfile = open('../json/trackinfo_nyc_old.json', 'wb')
     trlist = get_tracks(chart)
     print '++ Adding tracks from tracklist'
-    infolist = []
+    #infolist = []
     for tracktuple in trlist:
-        cache = collection.find_one({'cache_index' : {'track_name' : tracktuple[2], 'artist_name' : tracktuple[1]}})
+        #Checks to see if the combination of track title and artist name already exist. 
+        #Only returns the musicbrainz ID to make it not return the whole document.
+        cache = collection.find_one({'track.name' : tracktuple[2], 'track.artist.name' : tracktuple[1]}, {'track.id.musicbrainz' : '1'})
         if cache != None:
-                print 'Feature data of track %s of %s already in cache' % (tracktuple[2], tracktuple[1])
+                print 'Feature data of track %s by %s already in cache' % (tracktuple[2], tracktuple[1])
                 continue
         trinfo = track_info(tracktuple)
-        
-        #hier ergens gaat hij eerst twee keer alle track features dumpen
-        #van elke track heeft er 1 een cache_index document
-        features = {'cache_index': {'track_name': tracktuple[2], 'artist_name': tracktuple[1]}}
-        collection.insert(features)
-        collection.insert(trlist)
+        collection.insert(trinfo)
         #infolist.append(trinfo)
-    track_features = {"trackfeatures": infolist}
-    #json.dump(track_features, outfile, indent=4, separators=(',', ': '))
-    #outfile.close()
-    collection.insert(infolist)
+
+    #track_features = {"trackfeatures": infolist}
     if len(lastfm_failed) == 0 and len(echonest_failed) == 0:
         print '!! Everything succeeded'
     else:
