@@ -7,6 +7,7 @@ from pymongo import MongoClient
 connection = MongoClient()
 db = connection.internet_information
 collection = db.lastfm_music_features
+trackchart_coll = db.lastfm_metro_weekly_trackchart
 
 LASTFM_KEY = apikeys.alex_lastfm
 config.ECHO_NEST_API_KEY = apikeys.alex_echonest
@@ -100,11 +101,13 @@ def echonest_info(tracktuple, trinfo):
         except KeyError: pass
     return trinfo
 
-def get_tracks(chart):
+def get_tracks():
     tracklist = []
-    jchart = json.load(open(chart))
-    for track in jchart['toptracks']['track']:
-        tracklist.append((track['mbid'], track['artist']['name'], track['name']))
+    charts = list(trackchart_coll.find())
+    
+    for doc in charts:
+        for track in doc['toptracks']['track']:
+            tracklist.append((track['mbid'], track['artist']['name'], track['name']))
     return tracklist
 
 def translate_artist(string):
@@ -120,7 +123,7 @@ if __name__ == '__main__' :
 
     chart = '../json/geochart_nyc_old.json'
 
-    trlist = get_tracks(chart)
+    trlist = get_tracks()
     print '++ Adding tracks from tracklist'
     #infolist = []
     for tracktuple in trlist:
