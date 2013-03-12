@@ -101,9 +101,9 @@ def echonest_info(tracktuple, trinfo):
         except KeyError: pass
     return trinfo
 
-def get_tracks():
+def get_tracks(from_date, to_date, metro):
     tracklist = []
-    charts = list(trackchart_coll.find())
+cursor = list(collection.find({'cache_index.from_date': { "$gte": from_date}, 'cache_index.to_date': {"$lte": to_date}, 'cache_index.metro': metro}))
     
     for doc in charts:
         for track in doc['toptracks']['track']:
@@ -125,9 +125,11 @@ def translate_artist(string):
 
 if __name__ == '__main__' :
 
-    chart = '../json/geochart_nyc_old.json'
-
-    trlist = get_tracks()
+    
+    start_date = 1262476800
+    end_date = 1263081600
+    metro = 'Madrid'
+    trlist = get_tracks(start_date, end_date, metro)
     print '++ Adding tracks from tracklist'
     #infolist = []
     for tracktuple in trlist:
