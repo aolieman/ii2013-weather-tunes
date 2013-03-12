@@ -103,13 +103,17 @@ def echonest_info(tracktuple, trinfo):
 
 def get_tracks(from_date, to_date, metro):
     tracklist = []
-    cursor = list(collection.find({'cache_index.from_date': { "$gte": from_date}, 'cache_index.to_date': {"$lte": to_date}, 'cache_index.metro': metro}))
-    
+    charts = list(trackchart_coll.find({'cache_index.from_date': { "$gte": from_date}, 'cache_index.to_date': {"$lte": to_date}, 'cache_index.metro': metro}))
+
     for doc in charts:
         for track in doc['toptracks']['track']:
             tracklist.append((track['mbid'], track['artist']['name'], track['name']))
     
-    #TODO: write tracklist to file
+    tracklist_json = json.dumps(tracklist)
+    filename = "%s_%s_%s.json" % (from_date, end_date, metro)
+    f = open(filename, 'w')
+    f.write(tracklist_json)
+    f.close()
     tracklist = set(tracklist)
     tracklist = list(tracklist)
     return tracklist
@@ -135,7 +139,7 @@ if __name__ == '__main__' :
     for tracktuple in trlist:
         #Checks to see if the combination of track title and artist name already exist. 
         #Only returns the musicbrainz ID to make it not return the whole document.
-        cache = collection.find_one({'track.name' : tracktuple[2], 'track.artist.name' : tracktuple[1]}, {'track.id.musicbrainz' : '1'})
+        cache = collection.find_one({'track.name' : tracktuple[2], 'track.artist.name' : tracktuple[1]}, {'_id' : '1'})
         if cache != None:
                 print 'Feature data of track %s by %s already in cache' % (tracktuple[2], tracktuple[1])
                 continue
