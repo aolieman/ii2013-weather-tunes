@@ -103,7 +103,7 @@ def echonest_info(tracktuple, trinfo):
 
 def get_tracks(from_date, to_date, metro):
     tracklist = []
-cursor = list(collection.find({'cache_index.from_date': { "$gte": from_date}, 'cache_index.to_date': {"$lte": to_date}, 'cache_index.metro': metro}))
+    cursor = list(collection.find({'cache_index.from_date': { "$gte": from_date}, 'cache_index.to_date': {"$lte": to_date}, 'cache_index.metro': metro}))
     
     for doc in charts:
         for track in doc['toptracks']['track']:
