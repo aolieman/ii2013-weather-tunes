@@ -108,6 +108,10 @@ def get_tracks():
     for doc in charts:
         for track in doc['toptracks']['track']:
             tracklist.append((track['mbid'], track['artist']['name'], track['name']))
+    
+    #TODO: write tracklist to file
+    tracklist = set(tracklist)
+    tracklist = list(tracklist)
     return tracklist
 
 def translate_artist(string):
