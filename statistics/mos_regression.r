@@ -186,7 +186,7 @@ print(confint(tempo_min))
 
 # try to predict for given weather
 cat("\nPrediction for given weather\n")
-#print(predict(tempo_min, list(mos.press=80, mos.temp=28, mos.wind=20, mos.humh=55)))
+#print(predict(energy_min, list(mos.windh=25, mos.windl=0, mos.hail=0, mos.snowf=0, mos.vis=8.6, mos.vish=10, mos.dewh=-8, mos.thunder=0, mos.dewl=-12, mos.snow=1, mos.humh=93, mos.fog=1, mos.huml=74, mos.presh=1032, mos.presl=1017, mos.hum=86, mos.temph=-6, mos.rain=1, mos.templ=-10, mos.press=1025.8, mos.snowd=3, mos.visl=3, mos.temp=-8, mos.dew=-10, mos.precip=5, mos.wind=15), interval="pred"))
 
 # make scatterplot with regression line
 png("plots/moscow/tempo_windl.png", width=two_third_a4, height=two_third_a4, units="in", res=300)

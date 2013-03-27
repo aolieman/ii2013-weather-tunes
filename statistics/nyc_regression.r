@@ -30,7 +30,7 @@ print(confint(key_min))
 
 # try to predict for given weather
 cat("\nPrediction for given weather\n")
-#print(predict(key_min, list(nyc.press=80, nyc.temp=28, nyc.wind=20, nyc.humh=55)))
+#print(predict(energy_min, list(nyc.windh=25, nyc.windl=0, nyc.hail=0, nyc.snowf=0, nyc.vis=8.6, nyc.vish=10, nyc.dewh=-8, nyc.thunder=0, nyc.dewl=-12, nyc.snow=1, nyc.humh=93, nyc.fog=1, nyc.huml=74, nyc.presh=1032, nyc.presl=1017, nyc.hum=86, nyc.temph=-6, nyc.rain=1, nyc.templ=-10, nyc.press=1025.8, nyc.snowd=3, nyc.visl=3, nyc.temp=-8, nyc.dew=-10, nyc.precip=5, nyc.wind=15), interval="pred"))
 
 # make scatterplots with regression line
 png("plots/new_york/key_windl.png", width=two_third_a4, height=two_third_a4, units="in", res=300)

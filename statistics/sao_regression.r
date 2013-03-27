@@ -30,7 +30,7 @@ print(confint(key_min))
 
 # try to predict for given weather
 cat("\nPrediction for given weather\n")
-#print(predict(key_min, list(sao.press=80, sao.temp=28, sao.wind=20, sao.humh=55)))
+#print(predict(energy_min, list(sao.windh=25, sao.windl=0, sao.hail=0, sao.snowf=0, sao.vis=8.6, sao.vish=10, sao.dewh=-8, sao.thunder=0, sao.dewl=-12, sao.snow=1, sao.humh=93, sao.fog=1, sao.huml=74, sao.presh=1032, sao.presl=1017, sao.hum=86, sao.temph=-6, sao.rain=1, sao.templ=-10, sao.press=1025.8, sao.snowd=3, sao.visl=3, sao.temp=-8, sao.dew=-10, sao.precip=5, sao.wind=15), interval="pred"))
 
 # make scatterplots with regression line
 png("plots/sao_paulo/key_windl.png", width=two_third_a4, height=two_third_a4, units="in", res=300)
