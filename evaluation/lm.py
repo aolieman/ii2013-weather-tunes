@@ -1,11 +1,70 @@
 #!/usr/bin/env python
 from __future__ import division
 #from weekly_mf_weekly_wf_model import *
-from weekly_mf_daily_wf_model import *
+#from weekly_mf_daily_wf_model import *
 import csv
 from scipy.spatial.distance import cosine
 from scipy.spatial.distance import cityblock
 from scipy.stats import spearmanr
+
+# naive R model initialization
+dance = {}
+energy = {}
+loud = {}
+speech = {}
+tempo = {}
+
+import rpy2.robjects as robjects
+r = robjects.r
+predict = r['predict']
+ListVector = robjects.vectors.ListVector
+
+def init_r(model_type):
+    if model_type == 'weekly':
+        r.setwd("G:/MyData/Human Centered Multimedia/Internet Information/Project/statdata/r-weekly-wf")
+    else:
+        print "No other models defined yet"
+        return None
+    global dance, energy, loud, speech, tempo
+    r.load("models/moscow/dancability_min.saved")
+    dance['Moscow'] = r['dancability_min']
+    r.load("models/moscow/energy_min.saved")
+    energy['Moscow'] = r['energy_min']
+    r.load("models/moscow/loudness_min.saved")
+    loud['Moscow'] = r['loudness_min']
+    r.load("models/moscow/speech_min.saved")
+    speech['Moscow'] = r['speech_min']
+    r.load("models/moscow/tempo_min.saved")
+    tempo['Moscow'] = r['tempo_min']
+    r.load("models/new_york/dancability_min.saved")
+    dance['New York'] = r['dancability_min']
+    r.load("models/new_york/energy_min.saved")
+    energy['New York'] = r['energy_min']
+    r.load("models/new_york/loudness_min.saved")
+    loud['New York'] = r['loudness_min']
+    r.load("models/new_york/speech_min.saved")
+    speech['New York'] = r['speech_min']
+    r.load("models/new_york/tempo_min.saved")
+    tempo['New York'] = r['tempo_min']
+    r.load("models/sao_paulo/dancability_min.saved")
+    dance['Sao Paulo'] = r['dancability_min']
+    r.load("models/sao_paulo/energy_min.saved")
+    energy['Sao Paulo'] = r['energy_min']
+    r.load("models/sao_paulo/loudness_min.saved")
+    loud['Sao Paulo'] = r['loudness_min']
+    r.load("models/sao_paulo/speech_min.saved")
+    speech['Sao Paulo'] = r['speech_min']
+    r.load("models/sao_paulo/tempo_min.saved")
+    tempo['Sao Paulo'] = r['tempo_min']
+    print "All R models loaded" 
+
+def predict_r(model, **wfs):
+    wf_dict = ListVector(wfs)
+    pred = predict(model, wf_dict, interval="predict")
+    p_fit = pred[0]
+    p_lwr = pred[1]
+    p_upr = pred[2]
+    return p_fit, p_upr, p_lwr
 
 def predict_linear(coeffs, **kwargs):
     p = coeffs['normal']['intercept']
@@ -92,23 +151,23 @@ def predict_mf_features(features):
         snowf = 1.0 if wf[26] in ['', 'T'] else float(wf[26])
         
         print '++ Predicting energy with wfs for', k
-        p_energy = predict_linear(energy[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_energy = predict_r(energy[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting tempo with wfs for', k
-        p_tempo = predict_linear(tempo[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_tempo = predict_r(tempo[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting speechiness with wfs for', k
-        p_speech = predict_linear(speech[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_speech = predict_r(speech[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting loudness with wfs for', k
-        p_loud = predict_linear(loud[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_loud = predict_r(loud[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting danceability with wfs for', k
-        p_dance = predict_linear(dance[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_dance = predict_r(dance[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         prediction[k] = [p_energy, p_tempo, p_speech, p_loud, p_dance]
@@ -181,19 +240,19 @@ def print_prediction(p, name):
     
 def print_predictions(metro, **wfs):
     print '++ Predicting energy with wfs', wfs
-    p_energy = predict_linear(energy[metro], **wfs)
+    p_energy = predict_r(energy[metro], **wfs)
     
     print '++ Predicting tempo with wfs', wfs
-    p_tempo = predict_linear(tempo[metro], **wfs)
+    p_tempo = predict_r(tempo[metro], **wfs)
     
     print '++ Predicting speechiness with wfs', wfs
-    p_speech = predict_linear(speech[metro], **wfs)
+    p_speech = predict_r(speech[metro], **wfs)
     
     print '++ Predicting loudness with wfs', wfs
-    p_loud = predict_linear(loud[metro], **wfs)
+    p_loud = predict_r(loud[metro], **wfs)
     
     print '++ Predicting danceability with wfs', wfs
-    p_dance = predict_linear(dance[metro], **wfs)
+    p_dance = predict_r(dance[metro], **wfs)
     
     print_prediction(p_energy, 'energy')
     print_prediction(p_tempo, 'tempo')
@@ -205,6 +264,7 @@ if __name__ == '__main__':
     # demo 1 radio dj
     #print_predictions('New York', hail=0, snow=1, thunder=0, tornado=0,rain=1, fog=1, presh=1032, presl=1017, press=1025.8, temph=-6, templ=-10, temp=-8, dewh=-8, dewl=-12, dew=-10, snowd=3, vish=10, visl=3, vis=8.6, windh=25, windl=0, wind=15, humh=93, huml=74, hum=86, precip=5, snowf=0)
     # demo 2 ranking/evaluation
+    init_r('weekly')
     chart_count, significant_cosine, significant_cityblock = get_ranking()
 
     print "\n\n", chart_count, "charts in test data \n"
