@@ -213,25 +213,25 @@ if __name__ == '__main__':
     sum_rho_cosine = sum([ranking[1][0] for ranking in significant_cosine])
     average_rho_cosine = sum_rho_cosine / sum_chart_count
     print "\nAverage Spearman's Rho by cosine:", average_rho_cosine
-    sum_rho_cos_mos = sum([ranking[1][0] if 'Moscow' in ranking[0] else 0 for ranking in significant_cosine])
+    sum_rho_cos_mos = sum([ranking[1][0] for ranking in significant_cosine if 'Moscow' in ranking[0]])
     average_rho_cos_mos = sum_rho_cos_mos / chart_count['mos']
     print "Average Rho by cosine for Moscow:", average_rho_cos_mos
-    sum_rho_cos_sao = sum([ranking[1][0] if 'Sao' in ranking[0] else 0 for ranking in significant_cosine])
+    sum_rho_cos_sao = sum([ranking[1][0] for ranking in significant_cosine if 'Sao' in ranking[0]])
     average_rho_cos_sao = sum_rho_cos_sao / chart_count['sao']
     print "Average Rho by cosine for Sao Paulo:", average_rho_cos_sao
-    sum_rho_cos_nyc = sum([ranking[1][0] if 'New' in ranking[0] else 0 for ranking in significant_cosine])
+    sum_rho_cos_nyc = sum([ranking[1][0] for ranking in significant_cosine if 'New' in ranking[0]])
     average_rho_cos_nyc = sum_rho_cos_nyc / chart_count['nyc']
     print "Average Rho by cosine for New York:", average_rho_cos_nyc
 
     sum_rho_cityblock = sum([ranking[1][0] for ranking in significant_cityblock])
     average_rho_cityblock = sum_rho_cityblock / sum_chart_count
     print "Average Spearman's Rho by cityblock:", average_rho_cityblock
-    sum_rho_city_mos = sum([ranking[1][0] if 'Moscow' in ranking[0] else 0 for ranking in significant_cityblock])
+    sum_rho_city_mos = sum([ranking[1][0] for ranking in significant_cityblock if 'Moscow' in ranking[0]])
     average_rho_city_mos = sum_rho_city_mos / chart_count['mos']
     print "Average Rho by cityblock for Moscow:", average_rho_city_mos
-    sum_rho_city_sao = sum([ranking[1][0] if 'Sao' in ranking[0] else 0 for ranking in significant_cityblock])
+    sum_rho_city_sao = sum([ranking[1][0] for ranking in significant_cityblock if 'Sao' in ranking[0]])
     average_rho_city_sao = sum_rho_city_sao / chart_count['sao']
     print "Average Rho by cityblock for Sao Paulo:", average_rho_city_sao
-    sum_rho_city_nyc = sum([ranking[1][0] if 'New' in ranking[0] else 0 for ranking in significant_cityblock])
+    sum_rho_city_nyc = sum([ranking[1][0] for ranking in significant_cityblock if 'New' in ranking[0]])
     average_rho_city_nyc = sum_rho_city_nyc / chart_count['nyc']
     print "Average Rho by cityblock for New York:", average_rho_city_nyc
