@@ -138,7 +138,7 @@ def get_ranking():
     predictions = predict_mf_features(features)
     distances = get_mf_distances(features, predictions)
 
-    chart_count = 0
+    chart_count = {'mos': 0, 'sao': 0, 'nyc': 0}
     significant_cosine = []
     significant_cityblock = []
     
@@ -167,7 +167,10 @@ def get_ranking():
         print '### Spearman\'s (rho, sig) for cosine:', spearmanr_cosine
         print '### Spearman\'s (rho, sig) for cityblock:', spearmanr_cityblock
 
-        chart_count += 1
+        if 'Moscow' in key: chart_count['mos'] += 1
+        if 'Sao' in key: chart_count['sao'] += 1
+        if 'New' in key: chart_count['nyc'] += 1
+        # append significant rankings to lists
         if spearmanr_cosine[1] <= 0.05: significant_cosine.append((key, spearmanr_cosine))
         if spearmanr_cityblock[1] <= 0.05: significant_cityblock.append((key, spearmanr_cityblock))
 
@@ -205,9 +208,30 @@ if __name__ == '__main__':
     chart_count, significant_cosine, significant_cityblock = get_ranking()
 
     print "\n\n", chart_count, "charts in test data \n"
+    sum_chart_count = sum(chart_count.values())
+
     sum_rho_cosine = sum([ranking[1][0] for ranking in significant_cosine])
-    average_rho_cosine = sum_rho_cosine / chart_count
-    print "Average Spearman's Rho by cosine:", average_rho_cosine
+    average_rho_cosine = sum_rho_cosine / sum_chart_count
+    print "\nAverage Spearman's Rho by cosine:", average_rho_cosine
+    sum_rho_cos_mos = sum([ranking[1][0] if 'Moscow' in ranking[0] else 0 for ranking in significant_cosine])
+    average_rho_cos_mos = sum_rho_cos_mos / chart_count['mos']
+    print "Average Rho by cosine for Moscow:", average_rho_cos_mos
+    sum_rho_cos_sao = sum([ranking[1][0] if 'Sao' in ranking[0] else 0 for ranking in significant_cosine])
+    average_rho_cos_sao = sum_rho_cos_sao / chart_count['sao']
+    print "Average Rho by cosine for Sao Paulo:", average_rho_cos_sao
+    sum_rho_cos_nyc = sum([ranking[1][0] if 'New' in ranking[0] else 0 for ranking in significant_cosine])
+    average_rho_cos_nyc = sum_rho_cos_nyc / chart_count['nyc']
+    print "Average Rho by cosine for New York:", average_rho_cos_nyc
+
     sum_rho_cityblock = sum([ranking[1][0] for ranking in significant_cityblock])
-    average_rho_cityblock = sum_rho_cityblock / chart_count
+    average_rho_cityblock = sum_rho_cityblock / sum_chart_count
     print "Average Spearman's Rho by cityblock:", average_rho_cityblock
+    sum_rho_city_mos = sum([ranking[1][0] if 'Moscow' in ranking[0] else 0 for ranking in significant_cityblock])
+    average_rho_city_mos = sum_rho_city_mos / chart_count['mos']
+    print "Average Rho by cityblock for Moscow:", average_rho_city_mos
+    sum_rho_city_sao = sum([ranking[1][0] if 'Sao' in ranking[0] else 0 for ranking in significant_cityblock])
+    average_rho_city_sao = sum_rho_city_sao / chart_count['sao']
+    print "Average Rho by cityblock for Sao Paulo:", average_rho_city_sao
+    sum_rho_city_nyc = sum([ranking[1][0] if 'New' in ranking[0] else 0 for ranking in significant_cityblock])
+    average_rho_city_nyc = sum_rho_city_nyc / chart_count['nyc']
+    print "Average Rho by cityblock for New York:", average_rho_city_nyc
