@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 from __future__ import division
-#from weekly_mf_weekly_wf_model import *
-#from weekly_mf_daily_wf_model import *
-import csv
+import csv, os, gc
 from scipy.spatial.distance import cosine
 from scipy.spatial.distance import cityblock
 from scipy.stats import spearmanr
+
+# model to load
+model_type = 'daily'
+
+# simple translate dictionary for R's daily model weather feature prefixes
+metro_translate = {'Moscow':'mos','New York':'nyc','Sao Paulo':'sao'}
 
 # naive R model initialization
 dance = {}
@@ -20,45 +24,121 @@ predict = r['predict']
 ListVector = robjects.vectors.ListVector
 
 def init_r(model_type):
-    if model_type == 'weekly':
-        r.setwd("G:/MyData/Human Centered Multimedia/Internet Information/Project/statdata/r-weekly-wf")
-    else:
-        print "No other models defined yet"
-        return None
+    py_path = '/'.join(s for s in os.path.realpath(__file__).split('\\')[:-1])
+    r_model_path = py_path + '/models/' + model_type
+    
+    if not os.path.exists(r_model_path):
+        print 'Model directory does not exist.'
+        return
+    
+    try:
+        r.setwd(r_model_path)
+    except Exception:
+        print "Models for %s not defined yet." % model_type
+        return
+    
     global dance, energy, loud, speech, tempo
-    r.load("models/moscow/dancability_min.saved")
-    dance['Moscow'] = r['dancability_min']
-    r.load("models/moscow/energy_min.saved")
-    energy['Moscow'] = r['energy_min']
-    r.load("models/moscow/loudness_min.saved")
-    loud['Moscow'] = r['loudness_min']
-    r.load("models/moscow/speech_min.saved")
-    speech['Moscow'] = r['speech_min']
-    r.load("models/moscow/tempo_min.saved")
-    tempo['Moscow'] = r['tempo_min']
-    r.load("models/new_york/dancability_min.saved")
-    dance['New York'] = r['dancability_min']
-    r.load("models/new_york/energy_min.saved")
-    energy['New York'] = r['energy_min']
-    r.load("models/new_york/loudness_min.saved")
-    loud['New York'] = r['loudness_min']
-    r.load("models/new_york/speech_min.saved")
-    speech['New York'] = r['speech_min']
-    r.load("models/new_york/tempo_min.saved")
-    tempo['New York'] = r['tempo_min']
-    r.load("models/sao_paulo/dancability_min.saved")
+    
+    r.load("sao_paulo/dancability_min.saved")
     dance['Sao Paulo'] = r['dancability_min']
-    r.load("models/sao_paulo/energy_min.saved")
+    r.rm('dancability_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("sao_paulo/energy_min.saved")
     energy['Sao Paulo'] = r['energy_min']
-    r.load("models/sao_paulo/loudness_min.saved")
+    r.rm('energy_min')
+    gc.collect()
+    r.gc()
+        
+    r.load("sao_paulo/loudness_min.saved")
     loud['Sao Paulo'] = r['loudness_min']
-    r.load("models/sao_paulo/speech_min.saved")
+    r.rm('loudness_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("sao_paulo/speech_min.saved")
     speech['Sao Paulo'] = r['speech_min']
-    r.load("models/sao_paulo/tempo_min.saved")
+    r.rm('speech_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("sao_paulo/tempo_min.saved")
     tempo['Sao Paulo'] = r['tempo_min']
+    r.rm('tempo_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("moscow/dancability_min.saved")
+    dance['Moscow'] = r['dancability_min']
+    r.rm('dancability_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("moscow/energy_min.saved")
+    energy['Moscow'] = r['energy_min']
+    r.rm('energy_min')
+    gc.collect()
+    r.gc()
+    
+    r.load("moscow/loudness_min.saved")
+    loud['Moscow'] = r['loudness_min']
+    r.rm('loudness_min')
+    gc.collect()
+    r.gc()    
+    
+    r.load("moscow/speech_min.saved")
+    speech['Moscow'] = r['speech_min']
+    r.rm('speech_min')
+    gc.collect()    
+    r.gc()    
+
+    r.load("moscow/tempo_min.saved")
+    tempo['Moscow'] = r['tempo_min']
+    r.rm('tempo_min')
+    gc.collect()    
+    r.gc()
+    
+    r.load("new_york/dancability_min.saved")
+    dance['New York'] = r['dancability_min']
+    r.rm('dancability_min')
+    gc.collect()    
+    r.gc()
+    
+    r.load("new_york/energy_min.saved")
+    energy['New York'] = r['energy_min']
+    r.rm('energy_min')
+    gc.collect()    
+    r.gc()
+    
+    r.load("new_york/loudness_min.saved")
+    loud['New York'] = r['loudness_min']
+    r.rm('loudness_min')
+    gc.collect()    
+    r.gc()
+    
+    r.load("new_york/speech_min.saved")
+    speech['New York'] = r['speech_min']
+    r.rm('speech_min')
+    gc.collect()    
+    r.gc()
+    
+    r.load("new_york/tempo_min.saved")
+    tempo['New York'] = r['tempo_min']
+    r.rm('tempo_min')
+    gc.collect()    
+    r.gc()
+    
     print "All R models loaded" 
 
-def predict_r(model, **wfs):
+def predict_r(model, model_type, metro, **wfs):
+    # workaround for metro prefixes (mos, sao, nyc) in daily models
+    if model_type == 'daily':        
+        for k_wf in wfs.keys():
+            k_wf_new = metro_translate[metro] + '.' + k_wf
+            wfs[k_wf_new] = wfs[k_wf]
+            del wfs[k_wf]
+            
     wf_dict = ListVector(wfs)
     pred = predict(model, wf_dict, interval="predict")
     p_fit = pred[0]
@@ -66,33 +146,9 @@ def predict_r(model, **wfs):
     p_upr = pred[2]
     return p_fit, p_upr, p_lwr
 
-def predict_linear(coeffs, **kwargs):
-    p = coeffs['normal']['intercept']
-    p_max = coeffs['max']['intercept']
-    p_min = coeffs['min']['intercept']
-    p_str = str(p) + '+'
-    p_max_str = str(p_max) 
-    p_min_str = str(p_min)
-    for arg in kwargs:
-        try:
-            p += coeffs['normal'][arg] * kwargs[arg]
-            p_str += str(coeffs['normal'][arg]) + '*' + str(kwargs[arg]) + '+'
-            
-            p_max += coeffs['max'][arg] * kwargs[arg]
-            p_max_str += str(coeffs['max'][arg]) + '*' + str(kwargs[arg]) + '+'
-            
-            p_min += coeffs['min'][arg] * kwargs[arg]
-            p_min_str += str(coeffs['min'][arg]) + '*' + str(kwargs[arg]) + '+'
-        except KeyError:
-            print '?? Coefficient %s not defined in model, omitted %s' % (arg, arg) 
-    #print '%s=%s' % (p_str, p)
-    #print '%s=%s' % (p_max_str, p_max)
-    #print '%s=%s' % (p_min_str, p_min)
-    return p, p_max, p_min
-
 def get_features():
     features = {}
-    with open('moscow_ny_sao_paolo_2011_2012_test.csv') as f:
+    with open('C:\Users\michael\Documents\GitHub\ii2013-weather-tunes\evaluation\moscow_ny_sao_paolo_2011_2012_test.csv') as f:
         reader = csv.reader(f)
         reader.next() # skip first row with col names
         
@@ -151,23 +207,23 @@ def predict_mf_features(features):
         snowf = 1.0 if wf[26] in ['', 'T'] else float(wf[26])
         
         print '++ Predicting energy with wfs for', k
-        p_energy = predict_r(energy[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_energy = predict_r(energy[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting tempo with wfs for', k
-        p_tempo = predict_r(tempo[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_tempo = predict_r(tempo[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting speechiness with wfs for', k
-        p_speech = predict_r(speech[metro],hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_speech = predict_r(speech[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting loudness with wfs for', k
-        p_loud = predict_r(loud[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_loud = predict_r(loud[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         print '++ Predicting danceability with wfs for', k
-        p_dance = predict_r(dance[metro], hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
+        p_dance = predict_r(dance[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
         prediction[k] = [p_energy, p_tempo, p_speech, p_loud, p_dance]
@@ -203,7 +259,7 @@ def get_ranking():
     
     for key in distances.keys():
         # distances[key] holds list tuple(track, listeners, cosine, cityblock)
-        tracks = distances[key][:100]
+        tracks = distances[key][:200]
         print '############'
         # sort on listeners and print
         tracks.sort(key=lambda t: t[1], reverse=True)
@@ -240,19 +296,19 @@ def print_prediction(p, name):
     
 def print_predictions(metro, **wfs):
     print '++ Predicting energy with wfs', wfs
-    p_energy = predict_r(energy[metro], **wfs)
+    p_energy = predict_r(energy[metro], model_type, metro, **wfs)
     
     print '++ Predicting tempo with wfs', wfs
-    p_tempo = predict_r(tempo[metro], **wfs)
+    p_tempo = predict_r(tempo[metro],  model_type, metro, **wfs)
     
     print '++ Predicting speechiness with wfs', wfs
-    p_speech = predict_r(speech[metro], **wfs)
+    p_speech = predict_r(speech[metro], model_type, metro, **wfs)
     
     print '++ Predicting loudness with wfs', wfs
-    p_loud = predict_r(loud[metro], **wfs)
+    p_loud = predict_r(loud[metro], model_type, metro, **wfs)
     
     print '++ Predicting danceability with wfs', wfs
-    p_dance = predict_r(dance[metro], **wfs)
+    p_dance = predict_r(dance[metro], model_type, metro, **wfs)
     
     print_prediction(p_energy, 'energy')
     print_prediction(p_tempo, 'tempo')
@@ -264,7 +320,7 @@ if __name__ == '__main__':
     # demo 1 radio dj
     #print_predictions('New York', hail=0, snow=1, thunder=0, tornado=0,rain=1, fog=1, presh=1032, presl=1017, press=1025.8, temph=-6, templ=-10, temp=-8, dewh=-8, dewl=-12, dew=-10, snowd=3, vish=10, visl=3, vis=8.6, windh=25, windl=0, wind=15, humh=93, huml=74, hum=86, precip=5, snowf=0)
     # demo 2 ranking/evaluation
-    init_r('weekly')
+    init_r(model_type)
     chart_count, significant_cosine, significant_cityblock = get_ranking()
 
     print "\n\n", chart_count, "charts in test data \n"
