@@ -23,17 +23,15 @@ r = robjects.r
 predict = r['predict']
 ListVector = robjects.vectors.ListVector
 
-def init_r(model_type):
-    py_path = '/'.join(s for s in os.path.realpath(__file__).split('/')[:-1])
-    r_model_path = py_path + '/models/' + model_type
-
+def init_r():
+    r_model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/' + model_type
     if not os.path.exists(r_model_path):
         print 'Model directory does not exist.'
         return
     
     try:
         r.setwd(r_model_path)
-    except Exception:
+    except:
         print "Models for %s not defined yet." % model_type
         return
     
@@ -215,7 +213,7 @@ def get_ranking():
     
     for key in distances.keys():
         # distances[key] holds list tuple(track, listeners, cosine, cityblock)
-        tracks = distances[key][:200]
+        tracks = distances[key][:100]
         print '############'
         # sort on listeners and print
         tracks.sort(key=lambda t: t[1], reverse=True)
@@ -276,7 +274,7 @@ if __name__ == '__main__':
     # demo 1 radio dj
     #print_predictions('New York', hail=0, snow=1, thunder=0, tornado=0,rain=1, fog=1, presh=1032, presl=1017, press=1025.8, temph=-6, templ=-10, temp=-8, dewh=-8, dewl=-12, dew=-10, snowd=3, vish=10, visl=3, vis=8.6, windh=25, windl=0, wind=15, humh=93, huml=74, hum=86, precip=5, snowf=0)
     # demo 2 ranking/evaluation
-    init_r(model_type)
+    init_r()
 
     chart_count, significant_cosine, significant_cityblock = get_ranking()
 
