@@ -1,12 +1,15 @@
 #!/usr/bin/env python
+#coding=utf-8
 from __future__ import division
 import csv, os, gc
 from scipy.spatial.distance import cosine
 from scipy.spatial.distance import cityblock
 from scipy.stats import spearmanr
 
+path = os.path.dirname(os.path.abspath(__file__))
+
 # model to load
-model_type = 'daily'
+model_type = 'weekly'
 
 # simple translate dictionary for R's daily model weather feature prefixes
 metro_translate = {'Moscow':'mos','New York':'nyc','Sao Paulo':'sao'}
@@ -24,7 +27,7 @@ predict = r['predict']
 ListVector = robjects.vectors.ListVector
 
 def init_r():
-    r_model_path = os.path.dirname(os.path.abspath(__file__)) + '/models/' + model_type
+    r_model_path = path + '/models/' + model_type
     if not os.path.exists(r_model_path):
         print 'Model directory does not exist.'
         return
@@ -101,13 +104,13 @@ def predict_r(model, model_type, metro, **wfs):
 
 def get_features():
     features = {}
-    with open('/home/michael/projects/ii2013-weather-tunes/evaluation/moscow_ny_sao_paolo_2011_2012_test.csv') as f:
+    with open(path + '/moscow_ny_sao_paolo_2011_2012_test.csv') as f:
         reader = csv.reader(f)
         reader.next() # skip first row with col names
         
         for row in reader:
             if row[40] == '':
-                print 'No mfs for track %s - %s' % (row[31], row[32])
+                #print 'No mfs for track %s - %s' % (row[31], row[32])
                 continue
             
             wf = tuple(row[4:31])            
@@ -156,27 +159,54 @@ def predict_mf_features(features):
         humh = float(wf[22])
         huml = float(wf[23])
         hum = 0.0 if wf[24] == '' else float(wf[24])
-        precip = 1.0 if wf[25] in ['', 'T'] else float(wf[25])
-        snowf = 1.0 if wf[26] in ['', 'T'] else float(wf[26])
-        
-        print '++ Predicting energy with wfs for', k
+        precip = 0.0
+        snowf = 0.0
+        if metro in 'Mos':
+             if wf[25] == 'T':
+                  precip = 5.0
+             elif wf[25] == '':
+                  precip == 0.0
+             else:
+                  precip = float(w[25])
+        if metro in 'New':
+             if wf[25] == 'T':
+                  precip = 15.0
+             elif wf[25] == '':
+                  precip == 0.0
+             else:
+                  precip = float(w[25])
+
+             if wf[26] == 'T':
+                  snowf = 5.0
+             elif wf[26] == '':
+                  snowf == 0.0
+             else:
+                  snowf = float(w[26])
+        if metro in 'Sao':
+             if wf[25] == 'T':
+                  precip = 20.0
+             elif wf[25] == '':
+                  precip == 0.0
+             else:
+                  precip = float(w[25])       
+#        print '++ Predicting energy with wfs for', k
 
         p_energy = predict_r(energy[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
-        print '++ Predicting tempo with wfs for', k
+#        print '++ Predicting tempo with wfs for', k
         p_tempo = predict_r(tempo[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
-        print '++ Predicting speechiness with wfs for', k
+#        print '++ Predicting speechiness with wfs for', k
         p_speech = predict_r(speech[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
-        print '++ Predicting loudness with wfs for', k
+#        print '++ Predicting loudness with wfs for', k
         p_loud = predict_r(loud[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
-        print '++ Predicting danceability with wfs for', k
+#        print '++ Predicting danceability with wfs for', k
         p_dance = predict_r(dance[metro], model_type, metro, hail=hail, snow=snow, thunder=thunder,tornado=tornado,rain=rain, fog=fog, presh=presh, presl=presl, press=press, temph=temph, templ=templ, temp=temp, dewh=dewh, dewl=dewl, dew=dew, snowd=snowd, vish=vish, visl=visl, vis=vis,
     windh=windh, windl=windl, wind=wind, humh=humh, huml=huml, hum=hum, precip=precip, snowf=snowf)
     
@@ -185,6 +215,7 @@ def predict_mf_features(features):
 
 def get_mf_distances(features, predictions):
     distances = {}
+
     for k in features.keys():
         mfs = features[k]['mf']
         distances[k] = []
@@ -202,18 +233,13 @@ def print_ranking(metro_date, ranked_by, tracks):
     for i, t in enumerate(tracks):
         print '#%s %s (%s, %s, %s)' % (i+1, t[0], t[1], t[2], t[3])
 
-def get_ranking():
-    features = get_features()
-    predictions = predict_mf_features(features)
-    distances = get_mf_distances(features, predictions)
-
+def get_ranking(distances, n=100):
     chart_count = {'mos': 0, 'sao': 0, 'nyc': 0}
-    significant_cosine = []
-    significant_cityblock = []
+    cosine_rhos = []
     
     for key in distances.keys():
         # distances[key] holds list tuple(track, listeners, cosine, cityblock)
-        tracks = distances[key][:100]
+        tracks = distances[key][:n]
         print '############'
         # sort on listeners and print
         tracks.sort(key=lambda t: t[1], reverse=True)
@@ -225,25 +251,15 @@ def get_ranking():
         print_ranking(key, 'cosine', tracks)
         distances_ranked_by_cosine = [t[2] for t in tracks]
 
-        # sort on cityblock and print
-        tracks.sort(key=lambda t: t[3])    
-        print_ranking(key, 'cityblock', tracks)
-        distances_ranked_by_cityblock = [t[2] for t in tracks]
-
         spearmanr_cosine = spearmanr(distances_ranked_by_listeners, distances_ranked_by_cosine)
-        spearmanr_cityblock = spearmanr(distances_ranked_by_listeners, distances_ranked_by_cityblock)
-        
-        print '### Spearman\'s (rho, sig) for cosine:', spearmanr_cosine
-        print '### Spearman\'s (rho, sig) for cityblock:', spearmanr_cityblock
 
-        if 'Moscow' in key: chart_count['mos'] += 1
-        if 'Sao' in key: chart_count['sao'] += 1
-        if 'New' in key: chart_count['nyc'] += 1
-        # append significant rankings to lists
-        if spearmanr_cosine[1] <= 0.05: significant_cosine.append((key, spearmanr_cosine))
-        if spearmanr_cityblock[1] <= 0.05: significant_cityblock.append((key, spearmanr_cityblock))
-
-    return chart_count, significant_cosine, significant_cityblock
+        # append rho of significant rankings to list
+        if spearmanr_cosine[1] <= 0.1: 
+              cosine_rhos.append((key, spearmanr_cosine))
+        # append rho of non significant ranking to list as r=0, p=1
+        else:
+              cosine_rhos.append((key, (0.0, 1.0)))
+    return cosine_rhos
 
 def print_prediction(p, name):
     print '%s > %s < %s (%s=%s)' % (p[2], name, p[1], name, p[0])
@@ -275,34 +291,74 @@ if __name__ == '__main__':
     #print_predictions('New York', hail=0, snow=1, thunder=0, tornado=0,rain=1, fog=1, presh=1032, presl=1017, press=1025.8, temph=-6, templ=-10, temp=-8, dewh=-8, dewl=-12, dew=-10, snowd=3, vish=10, visl=3, vis=8.6, windh=25, windl=0, wind=15, humh=93, huml=74, hum=86, precip=5, snowf=0)
     # demo 2 ranking/evaluation
     init_r()
+    features = get_features()
+    predictions = predict_mf_features(features)
+    distances = get_mf_distances(features, predictions)
 
-    chart_count, significant_cosine, significant_cityblock = get_ranking()
+    rhos = {}
+    mean_rhos = []
+    rhos_mos = {}
+    mean_rhos_mos = []
+    rhos_ny = {}
+    mean_rhos_ny = []
+    rhos_sao = {}
+    mean_rhos_sao = []
+    for n in [10,50,100,150,200]:
+        print 'Running evaluation on %s # tracks for %s' % (n, model_type)
+	cosine_rhos = get_ranking(distances, n)
 
-    print "\n\n", chart_count, "charts in test data \n"
-    sum_chart_count = sum(chart_count.values())
+        # get spearmanr tuple at r[1]
+        spearmanr_mos = [r[1] for r in cosine_rhos if 'Moscow' in r[0]]
+        spearmanr_ny = [r[1] for r in cosine_rhos if 'New' in r[0]]
+        spearmanr_sao = [r[1] for r in cosine_rhos if 'Sao' in r[0]]
+	spearmanrs = spearmanr_mos + spearmanr_ny + spearmanr_sao
+        
+        # get number non sig. rhos and calculate sig. rhos; if p > 0.05 -> p = 1.0 and r = 0.0
+        n_nsig_rhos_mos = len([r for r in spearmanr_mos if r[1] == 1.0])
+        n_nsig_rhos_ny = len([r for r in spearmanr_ny if r[1] == 1.0])
+        n_nsig_rhos_sao = len([r for r in spearmanr_sao if r[1] == 1.0])
+        n_nsig_rhos = n_nsig_rhos_mos + n_nsig_rhos_ny + n_nsig_rhos_sao
+        n_sig_rhos_mos = len(spearmanr_mos) - n_nsig_rhos_mos
+        n_sig_rhos_ny = len(spearmanr_ny) - n_nsig_rhos_ny
+        n_sig_rhos_sao = len(spearmanr_sao) - n_nsig_rhos_sao
+        n_sig_rhos = n_sig_rhos_mos + n_sig_rhos_ny + n_sig_rhos_sao
+        
+        rhos_mos[str(n)] = [r[0] for r in spearmanr_mos]
+        rhos_ny[str(n)] = [r[0] for r in spearmanr_ny]
+        rhos_sao[str(n)] = [r[0] for r in spearmanr_sao]
+        rhos[str(n)] = [r[0] for r in spearmanrs]
+        mean_rho_mos = sum(rhos_mos[str(n)]) / len(rhos_mos[str(n)])
+        mean_rho_ny = sum(rhos_ny[str(n)]) / len(rhos_ny[str(n)])
+        mean_rho_sao = sum(rhos_sao[str(n)]) / len(rhos_sao[str(n)])
+        mean_rho = sum(rhos[str(n)]) / len(rhos[str(n)])
+        
+        mean_rhos_mos.append(mean_rho_mos)
+        mean_rhos_ny.append(mean_rho_ny)
+        mean_rhos_sao.append(mean_rho_sao)
+        mean_rhos.append(mean_rho)
+        print '#tracks=%s, avg sig. rho mos=%s' % (n, mean_rho_mos)
+        print '#tracks=%s, #sig. mos=%s, #non sig. mos=%s' % (n, n_sig_rhos_mos, n_nsig_rhos_mos)
 
-    sum_rho_cosine = sum([ranking[1][0] for ranking in significant_cosine])
-    average_rho_cosine = sum_rho_cosine / sum_chart_count
-    print "\nAverage Spearman's Rho by cosine:", average_rho_cosine
-    sum_rho_cos_mos = sum([ranking[1][0] for ranking in significant_cosine if 'Moscow' in ranking[0]])
-    average_rho_cos_mos = sum_rho_cos_mos / chart_count['mos']
-    print "Average Rho by cosine for Moscow:", average_rho_cos_mos
-    sum_rho_cos_sao = sum([ranking[1][0] for ranking in significant_cosine if 'Sao' in ranking[0]])
-    average_rho_cos_sao = sum_rho_cos_sao / chart_count['sao']
-    print "Average Rho by cosine for Sao Paulo:", average_rho_cos_sao
-    sum_rho_cos_nyc = sum([ranking[1][0] for ranking in significant_cosine if 'New' in ranking[0]])
-    average_rho_cos_nyc = sum_rho_cos_nyc / chart_count['nyc']
-    print "Average Rho by cosine for New York:", average_rho_cos_nyc
+        print '#tracks=%s, avg sig. rho ny=%s' % (n, mean_rho_ny)
+        print '#tracks=%s, #sig. ny=%s, #non sig. ny. mos=%s' % (n, n_sig_rhos_ny, n_nsig_rhos_ny)
 
-    sum_rho_cityblock = sum([ranking[1][0] for ranking in significant_cityblock])
-    average_rho_cityblock = sum_rho_cityblock / sum_chart_count
-    print "Average Spearman's Rho by cityblock:", average_rho_cityblock
-    sum_rho_city_mos = sum([ranking[1][0] for ranking in significant_cityblock if 'Moscow' in ranking[0]])
-    average_rho_city_mos = sum_rho_city_mos / chart_count['mos']
-    print "Average Rho by cityblock for Moscow:", average_rho_city_mos
-    sum_rho_city_sao = sum([ranking[1][0] for ranking in significant_cityblock if 'Sao' in ranking[0]])
-    average_rho_city_sao = sum_rho_city_sao / chart_count['sao']
-    print "Average Rho by cityblock for Sao Paulo:", average_rho_city_sao
-    sum_rho_city_nyc = sum([ranking[1][0] for ranking in significant_cityblock if 'New' in ranking[0]])
-    average_rho_city_nyc = sum_rho_city_nyc / chart_count['nyc']
-    print "Average Rho by cityblock for New York:", average_rho_city_nyc
+        print '#tracks=%s, avg sig. rho sao=%s' % (n, mean_rho_sao)
+        print '#tracks=%s, #sig. sao=%s, #non sig. sao=%s' % (n, n_sig_rhos_sao, n_nsig_rhos_sao)
+
+        print '#tracks=%s, avg sig. rho=%s' % (n, mean_rho)
+        print '#tracks=%s, #sig.=%s, #non sig.=%s' % (n, n_sig_rhos, n_nsig_rhos)
+
+    from pylab import *
+    labels = ('Moscow 10', 'Moscow 50', 'Moscow 100', 'Moscow 150', 'Moscow 200','New York 10', 'New York 50', 'New York 100', 'New York 150', 'New York 200', 'Sao Paulo 10', 'Sao Paulo 50', 'Sao Paulo 100', 'Sao Paulo 150', 'Sao Paulo 200')
+    ticks = range(1,len(labels)+1)
+
+    # boxplot moscow
+    f = figure()
+    boxplot([rhos_mos['10'], rhos_mos['50'], rhos_mos['100'], rhos_mos['150'], rhos_mos['200'], rhos_ny['10'], rhos_ny['50'], rhos_ny['100'], rhos_ny['150'], rhos_ny['200'], rhos_sao['10'], rhos_sao['50'], rhos_sao['100'], rhos_sao['150'], rhos_sao['200']])
+    scatter(ticks, [mean_rhos_mos, mean_rhos_ny, mean_rhos_sao])
+    xticks(ticks, labels, rotation='vertical', fontsize=10)
+    xlabel('tracks in chart evaluation')
+    ylabel(u'ᵨ', fontsize=28)
+    title('%s model evaluation' % model_type)
+    ylim([-1,1])     
+    f.subplots_adjust(bottom=0.25)
