@@ -254,7 +254,7 @@ def get_ranking(distances, n=100):
         spearmanr_cosine = spearmanr(distances_ranked_by_listeners, distances_ranked_by_cosine)
 
         # append rho of significant rankings to list
-        if spearmanr_cosine[1] <= 0.1: 
+        if spearmanr_cosine[1] <= 0.05: 
               cosine_rhos.append((key, spearmanr_cosine))
         # append rho of non significant ranking to list as r=0, p=1
         else:
