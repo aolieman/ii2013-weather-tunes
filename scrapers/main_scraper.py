@@ -13,10 +13,10 @@ from lastfm_scraper import scrape_weekly_charts, METRO_WEEKLY_TRACKCHART
 
 db = pymongo.Connection('localhost', 27017)['internet_information']
 
-last_fm_api_key = '5a1035fcc3d47cc61a59b799eb66e377'
+last_fm_api_key = ''
 last_fm_locations = [('Spain','Madrid')]
 
-wounderground_api_key = '8838f153d3fee4f8'
+wounderground_api_key = ''
 wounderground_locations = [('ES', 'Madrid')]
 
 from_date = datetime(2010, 1, 1)
